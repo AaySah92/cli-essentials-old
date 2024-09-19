@@ -1,0 +1,28 @@
+---
+- hosts: localhost
+
+  vars_prompt:
+      - name: user
+        promt: Enter admin user
+        private: false
+
+  become: "{{ user }}"
+  tasks:
+    - name: Install homebrew
+      shell: /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+    - name: Install packages
+      community.general.homebrew:
+        name: 
+          - git
+          - neovim
+          - fzf
+          - htop
+          - rsync
+          - lsd
+          - bat
+          - ripgrep
+          - z
+          - mosh
+        state: present
+        update_homebrew: true 
