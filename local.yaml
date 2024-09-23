@@ -1,15 +1,25 @@
 ---
 - hosts: localhost
 
-  vars_prompt:
-      - name: user
-        promt: Enter admin user
-        private: false
-
-  become: "{{ user }}"
   tasks:
+    - name: Set home folder
+      set_fact:
+        home: "~/"
+        brew: "/home/linuxbrew/.linuxbrew"
+
     - name: Install homebrew
       shell: /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+      become: true
+
+    - name: Add homebrew path
+      lineinfile:
+        path: "{{ home }}/.bashrc"
+        create: true
+        line: "{{ item }}"
+      loop:
+        - export "PATH={{ brew }}/bin:$PATH"
+        - export "MANPATH={{ brew }}/share/man:$MANPATH"
+        - export "INFOPATH={{ brew }}/share/info:$INFOPATH"
 
     - name: Install packages
       community.general.homebrew:
@@ -22,7 +32,13 @@
           - lsd
           - bat
           - ripgrep
-          - z
-          - mosh
-        state: present
+          - zoxide
         update_homebrew: true 
+
+    - name: Modify bashrc
+      lineinfile:
+        path: "{{ home }}/.bashrc"
+        line: "{{ item }}"
+      loop:
+        - EDITOR=nvim
+        - eval "$(fzf --bash)"
