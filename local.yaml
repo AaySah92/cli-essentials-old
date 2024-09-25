@@ -1,5 +1,6 @@
 ---
 - hosts: localhost
+  gather_facts: true
 
   tasks:
     - name: Set home folder
@@ -15,8 +16,8 @@
       become: true
       file:
         path: "{{ brew }}/.."
-        owner: "{{ ansible_user }}"
-        group: "{{ ansible_user }}"
+        owner: "{{ ansible_env.USER }}"
+        group: "{{ ansible_env.USER }}"
         recurse: true
 
     - name: Add homebrew path
@@ -40,6 +41,7 @@
           - lsd
           - bat
           - ripgrep
+          - tmux
           - zoxide
         update_homebrew: true 
 
