@@ -8,8 +8,16 @@
         brew: "/home/linuxbrew/.linuxbrew"
 
     - name: Install homebrew
-      shell: /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
       become: true
+      shell: NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+    - name: Set permissions for homebrew
+      become: true
+      file:
+        path: "{{ brew }}/.."
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
+        recurse: true
 
     - name: Add homebrew path
       lineinfile:
