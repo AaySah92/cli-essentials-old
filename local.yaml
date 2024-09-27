@@ -5,7 +5,9 @@
   tasks:
     - name: Set home folder
       set_fact:
-        home: "~/"
+        home: "{{ ansible_env.HOME }}"
+        config: "{{ ansible_env.HOME }}/.config"
+        dotfiles: "{{ ansible_env.HOME }}/dotfiles"
         brew: "/home/linuxbrew/.linuxbrew"
 
     - name: Install homebrew
@@ -34,6 +36,8 @@
       community.general.homebrew:
         name: 
           - git
+          - gcc
+          - node
           - neovim
           - fzf
           - htop
@@ -52,3 +56,26 @@
       loop:
         - EDITOR=nvim
         - eval "$(fzf --bash)"
+
+    - name: Create config dir if it does not exist
+      file:
+        path: "{{ config }}"
+        state: directory
+
+    - name: Get dotfile from GIT
+      git:
+        repo: https://github.com/AaySah92/config_dotfiles.git
+        dest: "{{ dotfiles }}"
+
+    - name: Register config files
+      find:
+        paths: "{{ dotfiles }}"
+        file_type: any
+      register: config_files
+
+    - name: Create symlinks to config files
+      file:
+        dest: "{{ config }}/{{ item.path | basename }}"
+        src: "{{ item.path }}"
+        state: link
+      loop: "{{ config_files.files }}"
