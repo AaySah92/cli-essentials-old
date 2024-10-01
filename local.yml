@@ -1,0 +1,104 @@
+---
+- hosts: localhost
+  gather_facts: true
+  vars:
+    state: "present"
+    distrobox_ini: distrobox.ini
+    dotfiles: dotfiles
+    packages:
+      - name: "git"
+        bins: "/usr/bin/git"
+
+      - name: "gcc"
+        bins: "/usr/bin/gcc"
+
+      - name: "npm"
+        bins: "/usr/bin/node /usr/bin/npm /usr/bin/npx"
+
+      - name: "neovim"
+        bins: "/usr/bin/nvim"
+        bash: "EDITOR=nvim"
+
+      - name: "fzf"
+        bins: "/usr/bin/fzf"
+        bash: "eval \"$(fzf --bash)\""
+
+      - name: "htop"
+        bins: "/usr/bin/htop"
+
+      - name: "rsync"
+        bins: "/usr/bin/rsync"
+
+      - name: "lsd"
+        bins: "/usr/bin/lsd"
+
+      - name: "bat"
+        bins: "/usr/bin/bat"
+
+      - name: "ripgrep"
+        bins: "/usr/bin/rg"
+
+      - name: "tmux"
+        bins: "/usr/bin/tmux"
+
+      - name: "zoxide"
+        bins: "/usr/bin/zoxide"
+        bash: "eval \"$(zoxide init bash)\""
+
+  tasks:
+    - name: On install
+      when: state == "present"
+      block:
+        - name: Create distrobox ini file
+          copy:
+            dest: "{{ distrobox_ini }}"
+            content: |
+              [arch]
+              image=archlinux:latest
+              start_now=true
+
+        - name: Add packages to install
+          blockinfile:
+            path: "{{ distrobox_ini }}"
+            append_newline: true
+            prepend_newline: true
+            marker: "# {mark} {{ item.name }} BLOCK"
+            block: |
+              additional_packages="{{ item.name }}"
+            # block: |
+            #   additional_packages="{{ item.name }}"
+            #   exported_bins="{{ item.bins }}"
+          loop: "{{ packages }}"
+
+        - name: Create distrobox container
+          shell: "distrobox-assemble create --file {{ distrobox_ini }}"
+
+        - name: Remove distrobox ini file
+          file:
+            path: "{{ distrobox_ini }}"
+            state: absent
+
+        - name: Get dotfile from GIT
+          git:
+            repo: https://github.com/AaySah92/config_dotfiles.git
+            dest: "{{ dotfiles }}"
+
+    - name: On uninstall
+      when: state == "absent"
+      block:
+        - name: Remove distrobox container
+          shell: distrobox-stop -Y arch && distrobox-rm -f arch
+
+        - name: Remove dotfile directory
+          file:
+            path: "{{ dotfiles }}"
+            state: absent
+              
+    - name: modify bashrc
+      lineinfile:
+        path: "{{ ansible_env.HOME }}/.bashrc"
+        line: "{{ item.bash }}"
+        state: "{{ state }}"
+      loop: "{{ packages }}"
+      when: "item.bash is defined"
+
