@@ -65,9 +65,7 @@
             marker: "# {mark} {{ item.name }} BLOCK"
             block: |
               additional_packages="{{ item.name }}"
-            # block: |
-            #   additional_packages="{{ item.name }}"
-            #   exported_bins="{{ item.bins }}"
+              exported_bins="{{ item.bins }}"
           loop: "{{ packages }}"
 
         - name: Create distrobox container
@@ -95,9 +93,12 @@
             state: absent
               
     - name: modify bashrc
-      lineinfile:
+      blockinfile:
         path: "{{ ansible_env.HOME }}/.bashrc"
-        line: "{{ item.bash }}"
+        append_newline: true
+        prepend_newline: true
+        marker: "# {mark} {{ item.name }} BLOCK"
+        block: "{{ item.bash }}"
         state: "{{ state }}"
       loop: "{{ packages }}"
       when: "item.bash is defined"
