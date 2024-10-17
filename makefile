@@ -15,4 +15,5 @@ help:
 	@echo "Valid commands:"
 	@echo "  make install   Install cli-essentials"
 	@echo "  make remove    Remove cli-essentials"
+	@echo "  make enter    	Enter environment"
 	@echo "  make help      Show this help message"

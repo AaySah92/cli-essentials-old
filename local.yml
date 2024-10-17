@@ -45,6 +45,9 @@
         bins: "/usr/bin/zoxide"
         bash: "eval \"$(zoxide init bash)\""
 
+      - name: "delta"
+        bins: "/usr/bin/delta"
+
   tasks:
     - name: On install
       when: state == "present"
@@ -54,7 +57,7 @@
             dest: "{{ distrobox_ini }}"
             content: |
               [arch]
-              image=archlinux:latest
+              image=docker.io/library/archlinux:latest
               start_now=true
 
         - name: Add packages to install
@@ -65,9 +68,7 @@
             marker: "# {mark} {{ item.name }} BLOCK"
             block: |
               additional_packages="{{ item.name }}"
-            # block: |
-            #   additional_packages="{{ item.name }}"
-            #   exported_bins="{{ item.bins }}"
+              # exported_bins="{{ item.bins }}"
           loop: "{{ packages }}"
 
         - name: Create distrobox container
